@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Web-based AR Aplication</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src='threex-arpatternfile.js'></script>
+
+<!-- include OpenCv-->
+<script async src="opencv.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+     background-color: #363940;
+     position: relative;
+        padding: 10px;
+}
+
+  .wrapper {
+        background-color: #fff;
+        border-radius: 5px;
+        width: 1195px;
+        max-width: 200%;
+        margin: 3px auto;
+        align-self: center;
+    }
+   #fileInput{
+	display: none;
+}
+
+#markerImage img {
+	width: 100%;
+	max-width: 300px;
+}
+
+#imageDisplay img{
+	max-width: 300px;
+}
+ 
+/* Create two columns/boxes that floats next to each other */
+nav {
+  float: left;
+  width: 20%;
+ 
+  background: white;
+  padding: 10px;
+}
+
+/* Style the list inside the menu */
+nav ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+article {
+  float: left;
+  padding: 20px;
+  width: 80%;
+  background-color: white;
+
+}
+
+/* Clear floats after the columns */
+section:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+
+
+/* Responsive layout - makes the two columns/boxes stack on top of each other instead of next to each other, on small screens */
+@media (max-width: 600px) {
+  nav, article {
+    width: 100%;
+    height: auto;
+  }
+}
+  h1,
+    h2 {
+        font-weight: normal;
+        text-align: center;
+        color: #aaa;
+    }
+    
+    h2 {
+        margin: 5px 0;
+        color: #1ABC9C;
+    }
+    
+    .txtcenter {
+        margin-top: 4em;
+        font-size: .9em;
+        text-align: center;
+        color: #aaa;
+    }
+    
+    .copy {
+        margin-top: 2em;
+    }
+    
+    .copy a {
+        text-decoration: none;
+        color: #1ABC9C;
+    }
+	.button {
+  background-color: #1ABC9C;
+  border: none;
+  color: white;
+  padding: 16px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  transition-duration: 0.4s;
+  cursor: pointer;
+}
+.button1 {
+border-radius: 4px;
+  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.button:hover span {
+  padding-right: 25px;
+}
+
+.button:hover span:after {
+  opacity: 1;
+  right: 0;
+}
+.button span {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: 0.5s;
+}
+
+.button span:after {
+  content: '\00bb';
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  right: -20px;
+  transition: 0.5s;
+}
+</style>
+</head>
+<body bgcolor="#333" leftmargin="10" topmargin="10">
+<div class="wrapper">
+<br><h1>Features Tracking </h1>
+<h2>For Web-based AR Aplication</h2>
+
+<div class='mdl-grid'>
+<section>
+  <nav>
+    <ul>
+      <li><label id='buttonUpload' for='fileInput'class="button button1" >
+	<input type='file' id='fileInput' style='display: none' style="vertical-align:middle"><span>Upload Image</span>
+	</label></li>
+	<br>
+      <li><button id= "buttonGenerate" class="button button1" style="vertical-align:middle"><span>
+		Extract Features</span>
+	</button></li>
+	<br>
+      <li><button id='buttonDownloadFullImage'class="button button1" style="vertical-align:middle"><span> 
+		Save Image</span>
+	</button></li>
+	<br>
+	<li><button id='buttonDownloadEncoded' class="button button1" style="vertical-align:middle"><span>
+		Download Marker</span>
+	</button></li>
+	<br>
+	<li><button id='buttonOpenWebCam' class="button button1" onclick="window.location.href = 'ARCamera.html'" style="vertical-align:middle"><span>
+		AR Camera</span>
+	</button></li>
+	<br>
+    </ul>
+  </nav>
+  
+  <article>
+  <div id = "imageDisplay" align="center">
+	<div id = "markerImage">
+		<img>
+	</div>
+	<br>
+	<br>
+	<div>
+		<img id="inputImage">
+		<canvas id='outputImage'></canvas>
+		<canvas id='featuresImage'></canvas>
+	</div>
+
+</div>
+
+</div>
+  </article>
+</section>
+</div><p class="txtcenter copy">by @WantenfaW</a>
+            <br />
+        </p>
+<script>
+	var innerImageURL = null;
+	var fullMarkerURL = null;
+	var imageName = null;
+	var img_input = document.getElementById('inputImage');
+	var file_input = document.getElementById('fileInput');
+	updateFullMarkerImage()
+
+	//Save Marker Query
+	document.querySelector('#buttonDownloadEncoded').addEventListener('click', function(){
+		if( innerImageURL === null ){
+			alert('upload a file first')
+			return
+		}
+		console.assert(innerImageURL)
+		THREEx.ArPatternFile.encodeImageURL(innerImageURL, function onComplete(patternFileString){
+			THREEx.ArPatternFile.triggerDownload(patternFileString, "pattern-" + "marker" + ".patt")
+		})
+	})
+
+	//Save Marker Image Query
+	document.querySelector('#buttonDownloadFullImage').addEventListener('click', function(){
+		if( innerImageURL === null ){
+			alert('upload a file first')
+			return
+		}
+
+		var domElement = window.document.createElement('a');
+		domElement.href = fullMarkerURL;
+		domElement.download = "pattern-" + 'marker' + '.png';
+		document.body.appendChild(domElement)
+		domElement.click();
+		document.body.removeChild(domElement)
+	})
+
+	//Input Image Query
+	document.querySelector('#fileInput').addEventListener('change', function(e){
+		var file = this.files[0];
+		img_input.src = URL.createObjectURL(e.target.files[0])
+		imageName = file.name
+		// remove file extension
+		imageName = imageName.substring(0, imageName.lastIndexOf('.')) || imageName
+
+		var reader = new FileReader();
+		reader.onload = function(event){
+			innerImageURL = event.target.result
+			updateFullMarkerImage()
+		};
+		reader.readAsDataURL(file);
+	});
+
+	//Generate Features Image Query
+	document.getElementById("buttonGenerate").addEventListener("click", function(){
+		let mat = cv.imread(img_input);
+		cv.cvtColor(mat,mat,cv.COLOR_RGB2GRAY);
+		cv.imshow('outputImage',mat);
+
+		var noArray = new cv.Mat();
+		var orb = new cv.ORB();
+		var kp = new cv.KeyPointVector();
+		orb.detect(mat, kp, noArray);
+
+		var des = new cv.Mat();
+		orb.compute(mat, kp, des);
+
+		var features = new cv.Mat();
+		var color = new cv.Scalar(0, 255, 0);
+		cv.drawKeypoints(mat,kp,features,color);
+		cv.imshow('featuresImage',features);
+		mat.delete();
+		file_input.delete();
+		img_input.delete();
+	});
+
+	//Update Maker Image Query
+	function updateFullMarkerImage(){
+		var patternRatio = 0.75
+		var imageSize = 300
+		var borderColor = 'black'
+
+		function hexaColor(color) {
+			return /^#[0-9A-F]{6}$/i.test(color);
+		};
+
+		var s = new Option().style;
+		s.color = borderColor;
+
+		THREEx.ArPatternFile.buildFullMarker(innerImageURL, patternRatio, imageSize, borderColor, function onComplete(markerUrl){
+			fullMarkerURL = markerUrl
+
+			var fullMarkerImage = document.createElement('img')
+			fullMarkerImage.src = fullMarkerURL
+
+			// put fullMarkerImage into #markerImage
+			var container = document.querySelector('#markerImage')
+			while (container.firstChild) container.removeChild(container.firstChild);
+			container.appendChild(fullMarkerImage)
+		})
+	}
+
+</script>
+
+</body>
+</html>

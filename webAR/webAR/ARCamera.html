@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<script src="js/aframe.min.js"></script>
+<!-- include aframe-ar.js -->
+<script src="js/aframe-ar.js"></script>
+
+<style type="text/css">
+	
+#arjsDebugUIContainer 
+{
+   display: none; !important;
+}	
+.a-enter-vr-button
+{
+   display: none; !important;		
+}
+</style>
+
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+	<a-scene embedded arjs='trackingMethod: best; debugUIEnabled:false'>
+        <a-assets>
+            <a-asset-item id="tree-model" src="http://localhost/webAR/webAR/assets/Tree.dae" crossOrigin="anonymous"></a-asset-item>
+      
+	   </a-assets>
+        <a-marker preset='custom' type='pattern' url='http://localhost/webAR/webAR/pattern-tree.patt' >
+           <a-collada-model src="#tree-model"  position="0 0 0" scale="1 1 1" rotation="0 0 ">
+		   	<a-animation attribute="rotation" to="0 360 0" dur="5000" easing='linear' repeat="indefinite"></a-animation>
+	  </a-collada-model>
+         </a-marker>
+        
+	
+		  <a-entity camera></a-entity>
+    </a-scene>
+	
+	
+</body>
+</html>
